@@ -15,9 +15,16 @@ import Test from "@/pages/Test";
 import TestResult from "@/pages/TestResult";
 import Profile from "@/pages/Profile";
 import { useEffect } from "react";
-
+import { useAuth } from "@/contexts/AuthContext";
 function Router() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
+  const { currentUser } = useAuth();
+  
+  useEffect(() => {
+    if (location === '/' && !currentUser) {
+      navigate('/login');
+    }
+  }, [location, currentUser]);
   
   // Determine if the current route should have the sidebar layout
   // Test pages and login don't use the sidebar layout
