@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Loader2, Settings } from 'lucide-react';
 import PageLayout from '@/components/ui/PageLayout';
+import { ThemeCard } from '@/components/ui/ThemeCard';
 
 export default function Profile() {
   const { currentUser, userProfile, isPaidUser, isAdmin } = useAuth();
@@ -195,6 +196,17 @@ export default function Profile() {
                 </div>
               )}
             </CardFooter>
+          </Card>
+
+          {/* Theme Card */}
+          <Card className="shadow-md hover:shadow-lg transition-shadow md:col-span-3">
+            <CardHeader className="bg-gradient-to-r from-primary/10 to-transparent">
+              <CardTitle>Appearance</CardTitle>
+              <CardDescription>Customize the look and feel of the application</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <ThemeCard />
+            </CardContent>
           </Card>
         </div>
       </div>
