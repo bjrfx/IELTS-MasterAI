@@ -15,6 +15,7 @@ import Results from "@/pages/Results";
 import Test from "@/pages/Test";
 import TestResult from "@/pages/TestResult";
 import Profile from "@/pages/Profile";
+import AIChatPage from "@/pages/AIChat";
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 function Router() {
@@ -40,6 +41,7 @@ function Router() {
           <Route path="/" component={Dashboard} />
           <Route path="/login" component={Login} />
           <Route path="/admin" component={Admin} />
+          <Route path="/ai-chat" component={AIChatPage} />
           <Route path="/profile" component={Profile} />
           <Route path="/practice" component={Practice} />
           <Route path="/practice/:module" component={Practice} />

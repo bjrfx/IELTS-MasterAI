@@ -38,11 +38,15 @@ const TESTS_COLLECTION = "tests";
 const RESULTS_COLLECTION = "results";
 const PROGRESS_COLLECTION = "progress";
 const USERS_COLLECTION = "users";
+const CHAT_MESSAGES_COLLECTION = "chatMessages";
+const CHAT_SESSIONS_COLLECTION = "chatSessions";
 
 export const testsCollection = collection(db, TESTS_COLLECTION);
 export const userResultsCollection = collection(db, RESULTS_COLLECTION);
 export const userProgressCollection = collection(db, PROGRESS_COLLECTION);
 export const usersCollection = collection(db, USERS_COLLECTION);
+export const chatMessagesCollection = collection(db, CHAT_MESSAGES_COLLECTION);
+export const chatSessionsCollection = collection(db, CHAT_SESSIONS_COLLECTION);
 
 // Test operations
 export const createTest = async (testData: any) => {

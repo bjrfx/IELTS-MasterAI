@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   Users,
-  GraduationCap
+  GraduationCap,
+  MessageSquare
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -72,6 +73,11 @@ export default function Sidebar() {
       name: "Admin Panel",
       href: "/admin",
       icon: <Settings className="h-5 w-5" />
+    },
+    {
+      name: "AI Chat",
+      href: "/ai-chat",
+      icon: <MessageSquare className="h-5 w-5" />
     }
   ];
   

@@ -1,20 +1,15 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { getAllTests, createTest, updateTest, deleteTest } from "@/lib/firebase";
-import { apiRequest } from "@/lib/queryClient";
+import { getAllTests, deleteTest } from "@/lib/firebase";
 import { 
   RefreshCw, 
   Eye, 
   Edit as EditIcon, 
   Trash, 
-  PlusCircle,
-  Filter,
 } from "lucide-react";
 import {
   Dialog,
@@ -52,17 +47,7 @@ interface Test {
 export default function AdminPanel() {
   const [tests, setTests] = useState<Test[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [testType, setTestType] = useState("academic");
-  const [apiProvider, setApiProvider] = useState("cohere");
-  const [testTitle, setTestTitle] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [sections, setSections] = useState({
-    reading: true,
-    listening: true,
-    writing: true,
-    speaking: true,
-  });
   const [currentTest, setCurrentTest] = useState<Test | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   
@@ -90,54 +75,7 @@ export default function AdminPanel() {
     }
   };
 
-  const generateTest = async () => {
-    if (!testTitle.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter a test title",
-        variant: "destructive",
-      });
-      return;
-    }
 
-    setIsGenerating(true);
-    try {
-      const response = await apiRequest("POST", "/api/ai/generate-test", {
-        title: testTitle,
-        type: testType,
-        apiProvider,
-        sections: {
-          reading: sections.reading,
-          listening: sections.listening,
-          writing: sections.writing,
-          speaking: sections.speaking,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate test");
-      }
-
-      const result = await response.json();
-      
-      toast({
-        title: "Success",
-        description: `Test "${testTitle}" has been generated successfully`,
-      });
-      
-      setTestTitle("");
-      fetchTests();
-    } catch (error) {
-      console.error("Error generating test:", error);
-      toast({
-        title: "Error",
-        description: "Failed to generate test. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   const handleDeleteTest = async (id: string) => {
     try {
@@ -176,122 +114,7 @@ export default function AdminPanel() {
     <div id="admin-panel" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
-        <p className="text-gray-600 mb-6">Generate and manage IELTS tests with AI</p>
-
-        {/* TEST GENERATION SECTION */}
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <h3 className="font-semibold text-lg mb-4">Generate New Test</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <Label htmlFor="test-type">Test Type</Label>
-                <Select 
-                  value={testType} 
-                  onValueChange={(value) => setTestType(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select test type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="academic">Academic</SelectItem>
-                    <SelectItem value="general">General Training</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="api-provider">AI Provider</Label>
-                <Select 
-                  value={apiProvider} 
-                  onValueChange={(value) => setApiProvider(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select AI provider" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cohere">Cohere API</SelectItem>
-                    <SelectItem value="google">Google AI Studio</SelectItem>
-                    <SelectItem value="deepseek">DeepSeek AI</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <Label htmlFor="test-title">Test Title</Label>
-              <Input
-                id="test-title"
-                value={testTitle}
-                onChange={(e) => setTestTitle(e.target.value)}
-                placeholder="e.g., Academic Test May 2023"
-              />
-            </div>
-
-            <div className="mb-6">
-              <div className="flex space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="reading" 
-                    checked={sections.reading} 
-                    onCheckedChange={(checked) => 
-                      setSections({...sections, reading: checked as boolean})
-                    }
-                  />
-                  <Label htmlFor="reading">Reading</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="listening" 
-                    checked={sections.listening} 
-                    onCheckedChange={(checked) => 
-                      setSections({...sections, listening: checked as boolean})
-                    }
-                  />
-                  <Label htmlFor="listening">Listening</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="writing" 
-                    checked={sections.writing} 
-                    onCheckedChange={(checked) => 
-                      setSections({...sections, writing: checked as boolean})
-                    }
-                  />
-                  <Label htmlFor="writing">Writing</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="speaking" 
-                    checked={sections.speaking} 
-                    onCheckedChange={(checked) => 
-                      setSections({...sections, speaking: checked as boolean})
-                    }
-                  />
-                  <Label htmlFor="speaking">Speaking</Label>
-                </div>
-              </div>
-            </div>
-
-            <Button 
-              onClick={generateTest} 
-              disabled={isGenerating}
-              className="w-full flex items-center justify-center"
-            >
-              {isGenerating ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  <span>Generating...</span>
-                </>
-              ) : (
-                <>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  <span>Generate New Test</span>
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+        <p className="text-gray-600 mb-6">Manage IELTS tests</p>
 
         {/* TESTS MANAGEMENT SECTION */}
         <Card className="overflow-hidden">
