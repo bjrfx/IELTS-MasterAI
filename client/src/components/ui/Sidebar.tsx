@@ -77,6 +77,16 @@ export default function Sidebar() {
     {
       name: "AI Chat",
       href: "/ai-chat",
+     icon: <MessageSquare className="h-5 w-5" />
+    },
+    {
+      name: "IELTS General",
+      href: "/ai-chat/general",
+      icon: <MessageSquare className="h-5 w-5" />
+    },
+    {
+      name: "IELTS Academic",
+      href: "/ai-chat/academic",
       icon: <MessageSquare className="h-5 w-5" />
     }
   ];
