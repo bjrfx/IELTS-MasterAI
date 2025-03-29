@@ -18,6 +18,8 @@ import Profile from "@/pages/Profile";
 import AIChatPage from "@/pages/AIChat";
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import IELTSAcademic from "@/pages/ai-chat/academic";
+import IELTSGeneral from "@/pages/ai-chat/general";
 function Router() {
   const [location, navigate] = useLocation();
   const { currentUser } = useAuth();
@@ -50,6 +52,8 @@ function Router() {
           <Route path="/results" component={Results} />
           <Route path="/results/:id" component={TestResult} />
           <Route path="/test/:id" component={Test} />
+          <Route path="/ai-chat/academic" component={IELTSAcademic} />
+          <Route path="/ai-chat/general" component={IELTSGeneral} />
           <Route component={NotFound} />
         </Switch>
       </main>
