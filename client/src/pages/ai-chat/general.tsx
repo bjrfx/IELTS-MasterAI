@@ -5,6 +5,7 @@ import PageLayout from "@/components/ui/PageLayout";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function IELTSGeneral() {
   const { currentUser, isAdmin, isLoading } = useAuth();
@@ -49,7 +50,34 @@ export default function IELTSGeneral() {
         </div>
         
         <Card className="p-6">
-          <p className="text-gray-600">IELTS General content will be implemented here.</p>
+          <Tabs defaultValue="reading" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="reading">Reading</TabsTrigger>
+              <TabsTrigger value="writing">Writing</TabsTrigger>
+              <TabsTrigger value="listening">Listening</TabsTrigger>
+              <TabsTrigger value="speaking">Speaking</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="reading" className="mt-6">
+              <h3 className="text-xl font-semibold mb-4">Reading Module</h3>
+              <p className="text-gray-600">General Reading content will be implemented here.</p>
+            </TabsContent>
+
+            <TabsContent value="writing" className="mt-6">
+              <h3 className="text-xl font-semibold mb-4">Writing Module</h3>
+              <p className="text-gray-600">General Writing content will be implemented here.</p>
+            </TabsContent>
+
+            <TabsContent value="listening" className="mt-6">
+              <h3 className="text-xl font-semibold mb-4">Listening Module</h3>
+              <p className="text-gray-600">General Listening content will be implemented here.</p>
+            </TabsContent>
+
+            <TabsContent value="speaking" className="mt-6">
+              <h3 className="text-xl font-semibold mb-4">Speaking Module</h3>
+              <p className="text-gray-600">General Speaking content will be implemented here.</p>
+            </TabsContent>
+          </Tabs>
         </Card>
       </div>
     </PageLayout>
