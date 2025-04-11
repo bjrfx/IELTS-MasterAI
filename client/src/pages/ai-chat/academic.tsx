@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AcademicReading from "@/components/tests/reading/AcademicReading";
 
 export default function IELTSAcademic() {
   const { currentUser, isAdmin, isLoading } = useAuth();
@@ -59,8 +60,7 @@ export default function IELTSAcademic() {
             </TabsList>
 
             <TabsContent value="reading" className="mt-6">
-              <h3 className="text-xl font-semibold mb-4">Reading Module</h3>
-              <p className="text-gray-600">Academic Reading content will be implemented here.</p>
+              <AcademicReading />
             </TabsContent>
 
             <TabsContent value="writing" className="mt-6">

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import GeneralReading from "@/components/tests/reading/GeneralReading";
 
 export default function IELTSGeneral() {
   const { currentUser, isAdmin, isLoading } = useAuth();
@@ -59,8 +60,7 @@ export default function IELTSGeneral() {
             </TabsList>
 
             <TabsContent value="reading" className="mt-6">
-              <h3 className="text-xl font-semibold mb-4">Reading Module</h3>
-              <p className="text-gray-600">General Reading content will be implemented here.</p>
+              <GeneralReading />
             </TabsContent>
 
             <TabsContent value="writing" className="mt-6">
