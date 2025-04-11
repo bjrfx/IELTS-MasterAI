@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/table";
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import RichTextEditor from '@/components/ui/rich-text-editor';
 
 // Question types based on IELTS format
 type QuestionType = 
@@ -1012,17 +1013,17 @@ export default function GeneralReading() {
                           Typical source: {section.sources.join(', ')}
                         </div>
                       </div>
-                      <Textarea
-                        id={`section-${sectionIndex}-content`}
+                      <RichTextEditor
                         value={section.content}
-                        onChange={(e) => setTest(prev => ({
+                        onChange={(value) => setTest(prev => ({
                           ...prev,
                           sections: prev.sections.map((s, idx) =>
-                            idx === sectionIndex ? { ...s, content: e.target.value } : s
+                            idx === sectionIndex ? { ...s, content: value } : s
                           )
                         }))}
                         placeholder={`Enter reading passage for ${section.title}`}
-                        className="min-h-[250px]"
+                        height="250px"
+                        label=""
                       />
                     </div>
                   </div>

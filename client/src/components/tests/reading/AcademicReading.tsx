@@ -11,6 +11,7 @@ import { saveTest } from '@/lib/services/testService';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import RichTextEditor from '@/components/ui/rich-text-editor';
 import {
   Accordion,
   AccordionContent,
@@ -1057,17 +1058,17 @@ export default function AcademicReading() {
                     
                     <div>
                       <Label htmlFor={`passage-${passageIndex}-content`}>Passage Content</Label>
-                      <Textarea
-                        id={`passage-${passageIndex}-content`}
+                      <RichTextEditor
                         value={passage.content}
-                        onChange={(e) => setTest(prev => ({
+                        onChange={(value) => setTest(prev => ({
                           ...prev,
                           passages: prev.passages.map((p, idx) =>
-                            idx === passageIndex ? { ...p, content: e.target.value } : p
+                            idx === passageIndex ? { ...p, content: value } : p
                           )
                         }))}
                         placeholder="Enter reading passage text (800-1000 words)"
-                        className="min-h-[250px]"
+                        height="250px"
+                        label=""
                       />
                     </div>
                   </div>
