@@ -256,12 +256,24 @@ export default function GeneralReading() {
         content: {
           reading: {
             passages: test.sections.map((section, index) => ({
-              title: section.title,
-              content: section.content,
-              questions: section.questions,
+              title: section.title || '',
+              content: section.content || '',
+              questions: section.questions.map(q => ({
+                id: q.id,
+                text: q.text || '',
+                type: q.type || 'multiple-choice',
+                options: Array.isArray(q.options) ? q.options : [],
+                answer: q.answer || '',
+                instructions: q.instructions || '',
+                subQuestions: q.subQuestions ? q.subQuestions.map(sq => ({
+                  id: sq.id || '',
+                  text: sq.text || '',
+                  answer: sq.answer || ''
+                })) : undefined
+              })),
               difficulty: index === 0 ? 'basic' : index === 1 ? 'intermediate' : 'advanced',
-              source: section.sources.join(', '),
-              purpose: section.purpose
+              source: section.sources ? section.sources.join(', ') : '',
+              purpose: section.purpose || ''
             }))
           }
         }

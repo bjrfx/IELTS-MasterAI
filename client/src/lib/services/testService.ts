@@ -22,12 +22,34 @@ interface IELTSTest {
 
 const COLLECTION_NAME = 'tests';
 
+// Helper function to recursively remove undefined values from an object
+const removeUndefinedValues = (obj: any): any => {
+  if (obj === null || obj === undefined || typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => removeUndefinedValues(item)).filter(item => item !== undefined);
+  }
+
+  return Object.fromEntries(
+    Object.entries(obj)
+      .filter(([_, v]) => v !== undefined)
+      .map(([k, v]) => [k, removeUndefinedValues(v)])
+  );
+};
+
 export const saveTest = async (test: Omit<IELTSTest, 'createdAt'>) => {
   try {
+    // Clean the test object by removing all undefined values
+    const cleanedTest = removeUndefinedValues(test);
+    
     const testData = {
-      ...test,
+      ...cleanedTest,
       createdAt: new Date()
     };
+    
+    console.log('Saving test data:', JSON.stringify(testData));
     const docRef = await addDoc(collection(db, COLLECTION_NAME), testData);
     return docRef.id;
   } catch (error) {

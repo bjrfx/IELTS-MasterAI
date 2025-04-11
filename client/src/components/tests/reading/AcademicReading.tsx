@@ -233,7 +233,24 @@ export default function AcademicReading() {
         content: {
           reading: {
             passages: test.passages.map((passage) => ({
-              ...passage
+              title: passage.title || '',
+              content: passage.content || '',
+              questions: passage.questions.map(q => ({
+                id: q.id,
+                text: q.text || '',
+                type: q.type || 'multiple-choice',
+                options: Array.isArray(q.options) ? q.options : [],
+                answer: q.answer || '',
+                instructions: q.instructions || '',
+                subQuestions: q.subQuestions ? q.subQuestions.map(sq => ({
+                  id: sq.id || '',
+                  text: sq.text || '',
+                  answer: sq.answer || ''
+                })) : undefined
+              })),
+              source: passage.source || '',
+              topic: passage.topic || '',
+              difficulty: passage.difficulty || 'basic'
             }))
           }
         }

@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 export default function Practice() {
-  const [location] = useLocation();
+  const [, navigate] = useLocation(); // Get the navigate function from wouter
   const { currentUser, isPaidUser } = useAuth();
   const [activeModule, setActiveModule] = useState<string>("all");
   const [testType, setTestType] = useState<string>("all");
@@ -162,6 +162,21 @@ export default function Practice() {
   const isTestLocked = (test: any) => {
     return !isPaidUser && test.type === "academic";
   };
+  
+  // Helper to generate the correct test URL with required parameters
+  const getTestUrl = (test: any) => {
+    // Determine which module to start with based on what's available
+    let module = '';
+    if (test.hasReading) module = 'reading';
+    else if (test.hasListening) module = 'listening';
+    else if (test.hasWriting) module = 'writing';
+    else if (test.hasSpeaking) module = 'speaking';
+    
+    // Return URL with required query parameters
+    const url = `/test/${test.id}?mode=practice&module=${module}`;
+    console.log("Generated test URL:", url);
+    return url;
+  };
 
   return (
     <PageLayout
@@ -296,7 +311,24 @@ export default function Practice() {
                     ) : (
                       <button
                         className="flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
-                        onClick={() => window.location.href = `/test/${test.id}`}
+                        onClick={() => {
+                          // Build the URL properly with query parameters
+                          const testId = test.id;
+                          let module = 'reading';  // Default to reading if available
+                          
+                          // Choose the first available module
+                          if (test.hasReading) module = 'reading';
+                          else if (test.hasListening) module = 'listening';
+                          else if (test.hasWriting) module = 'writing';
+                          else if (test.hasSpeaking) module = 'speaking';
+                          
+                          // Construct the full URL with query parameters
+                          const url = `/test/${testId}?mode=practice&module=${module}`;
+                          console.log("Navigating to:", url);
+                          
+                          // Use window.location to ensure parameters are preserved
+                          window.location.href = url;
+                        }}
                       >
                         Start Test
                         <ArrowRight className="ml-2 h-4 w-4" />

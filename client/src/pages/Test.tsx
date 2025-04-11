@@ -14,11 +14,21 @@ import { Loader2 } from "lucide-react";
 
 // Parse query parameters
 function useQueryParams() {
-  const [location] = useLocation();
-  const params = new URLSearchParams(location.split('?')[1]);
+  // We need to directly access the browser URL instead of using wouter's location
+  // This fixes the issue of parameters not being detected
+  const searchString = window.location.search;
+  console.log("Direct window.location.search:", searchString);
+  
+  const searchParams = new URLSearchParams(searchString);
+  
+  const moduleParam = searchParams.get('module');
+  const modeParam = searchParams.get('mode');
+  
+  console.log("Direct parsed params - module:", moduleParam, "mode:", modeParam);
+  
   return {
-    module: params.get('module') as 'reading' | 'listening' | 'writing' | 'speaking' | null,
-    mode: params.get('mode') as 'practice' | 'simulation' | null,
+    module: moduleParam as 'reading' | 'listening' | 'writing' | 'speaking' | null,
+    mode: modeParam as 'practice' | 'simulation' | null,
   };
 }
 
@@ -50,17 +60,23 @@ export default function Test() {
   useEffect(() => {
     const fetchTestData = async () => {
       if (!params.id) {
+        console.log("No test ID found in params");
         setIsMissingParams(true);
         return;
       }
 
       try {
         setIsLoading(true);
+        console.log("Fetching test data with ID:", params.id);
+        console.log("Query params:", queryParams);
         
         // Check if we already have the current test ID loaded
         if (currentTestId !== params.id) {
           const testData = await getTest(params.id);
+          console.log("Test data retrieved:", testData);
+          
           if (!testData) {
+            console.log("Test not found in Firestore");
             toast({
               title: "Error",
               description: "Test not found. Please try another test.",
@@ -77,11 +93,14 @@ export default function Test() {
         
         // Set the current module from query parameter for practice mode
         if (queryParams.mode === 'practice' && queryParams.module) {
+          console.log("Setting module for practice mode:", queryParams.module);
           setCurrentModule(queryParams.module);
         } else if (queryParams.mode === 'simulation') {
+          console.log("Setting reading module for simulation mode");
           // Start with reading for simulation mode
           setCurrentModule('reading');
         } else if (!queryParams.module && !queryParams.mode) {
+          console.log("Missing query parameters - mode or module not provided");
           setIsMissingParams(true);
           return;
         }
