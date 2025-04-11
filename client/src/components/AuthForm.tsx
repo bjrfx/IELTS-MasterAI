@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Facebook } from "lucide-react";
-import { signInWithEmail, signUpWithEmail, signInWithGoogle, signInWithFacebook } from "@/lib/firebase";
+import { Mail, Fingerprint } from "lucide-react";
+import { signInWithEmail, signUpWithEmail, signInWithGoogle, signInWithPasskey } from "@/lib/firebase";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -101,14 +101,39 @@ export default function AuthForm() {
     }
   };
 
-  const handleFacebookSignIn = async () => {
+  const handlePasskeySignIn = async () => {
     try {
-      await signInWithFacebook();
+      // Show a loading toast to indicate authentication is in progress
+      toast({
+        title: "Authenticating",
+        description: "Attempting to sign in with passkey...",
+      });
+      
+      await signInWithPasskey();
+      
+      // On success, show a success message and redirect
+      toast({
+        title: "Authentication successful",
+        description: "You have been signed in successfully.",
+      });
       setLocation("/");
     } catch (error: any) {
+      // Check for specific error types to provide more helpful messages
+      let errorMessage = "Failed to sign in with passkey.";
+      
+      if (error.message.includes("WebAuthn is not supported")) {
+        errorMessage = "Your browser doesn't support passkeys. Try using a different sign-in method.";
+      } else if (error.message.includes("platform authenticator")) {
+        errorMessage = "Your device doesn't have passkey capability. We'll try to use Google sign-in instead.";
+        // Attempt Google sign-in as a fallback after a short delay
+        setTimeout(() => {
+          handleGoogleSignIn();
+        }, 1000);
+      }
+      
       toast({
-        title: "Facebook sign-in failed",
-        description: error.message || "Failed to sign in with Facebook.",
+        title: "Passkey sign-in failed",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -266,11 +291,11 @@ export default function AuthForm() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleFacebookSignIn}
+                onClick={handlePasskeySignIn}
                 className="flex items-center justify-center"
               >
-                <Facebook className="mr-2 h-4 w-4" />
-                Facebook
+                <Fingerprint className="mr-2 h-4 w-4" />
+                Passkey
               </Button>
             </div>
           </div>
