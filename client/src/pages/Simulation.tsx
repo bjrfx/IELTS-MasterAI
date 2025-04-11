@@ -28,7 +28,8 @@ export default function Simulation() {
     
     // Filter for full simulation tests (containing all modules) of the selected type
     const simulationTests = tests.filter(test => 
-      test.type === testType && 
+      test.testType === testType && // Use testType instead of type
+      test.type === 'simulation' && // Ensure it's marked as a simulation test
       test.hasReading && 
       test.hasListening && 
       test.hasWriting && 

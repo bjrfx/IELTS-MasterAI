@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, X, FileText, Briefcase, BookOpen, ChevronDown, ChevronUp, Save, Trash2 } from 'lucide-react';
 import { generateTest } from '@/lib/services/geminiService';
 import { saveTest } from '@/lib/services/testService';
+import { toast } from '@/hooks/use-toast';
 import {
   Accordion,
   AccordionContent,
@@ -113,18 +114,24 @@ const createEmptyQuestion = (id: number, type: QuestionType = 'multiple-choice')
     undefined
 });
 
-// Initial distribution of questions across sections
-const SECTION_1_QUESTIONS = 14;
-const SECTION_2_QUESTIONS = 13;
-const SECTION_3_QUESTIONS = 13;
+// Initial distribution of questions across sections - changed to variables for configurability
+const DEFAULT_SECTION_1_QUESTIONS = 14;
+const DEFAULT_SECTION_2_QUESTIONS = 13;
+const DEFAULT_SECTION_3_QUESTIONS = 13;
 
 export default function GeneralReading() {
+  const [questionCounts, setQuestionCounts] = useState({
+    section1: DEFAULT_SECTION_1_QUESTIONS,
+    section2: DEFAULT_SECTION_2_QUESTIONS,
+    section3: DEFAULT_SECTION_3_QUESTIONS
+  });
+  
   const [test, setTest] = useState<ReadingTest>({
     sections: [
       {
         title: 'Social Survival',
         content: '',
-        questions: Array(SECTION_1_QUESTIONS).fill(null).map((_, index) => 
+        questions: Array(questionCounts.section1).fill(null).map((_, index) => 
           createEmptyQuestion(index + 1)
         ),
         sources: ['Notices', 'Advertisements', 'Timetables', 'Leaflets'],
@@ -133,8 +140,8 @@ export default function GeneralReading() {
       {
         title: 'Workplace Survival',
         content: '',
-        questions: Array(SECTION_2_QUESTIONS).fill(null).map((_, index) => 
-          createEmptyQuestion(index + SECTION_1_QUESTIONS + 1)
+        questions: Array(questionCounts.section2).fill(null).map((_, index) => 
+          createEmptyQuestion(index + questionCounts.section1 + 1)
         ),
         sources: ['Job descriptions', 'Company policies', 'Workplace manuals', 'Instructions'],
         purpose: 'Information on job roles, company rules, instructions'
@@ -142,8 +149,8 @@ export default function GeneralReading() {
       {
         title: 'General Reading',
         content: '',
-        questions: Array(SECTION_3_QUESTIONS).fill(null).map((_, index) => 
-          createEmptyQuestion(index + SECTION_1_QUESTIONS + SECTION_2_QUESTIONS + 1)
+        questions: Array(questionCounts.section3).fill(null).map((_, index) => 
+          createEmptyQuestion(index + questionCounts.section1 + questionCounts.section2 + 1)
         ),
         sources: ['Books', 'Magazines', 'Newspapers', 'Non-academic articles'],
         purpose: 'To test deeper understanding of more complex text'
@@ -183,8 +190,8 @@ export default function GeneralReading() {
                 questions: Array.isArray(aiSection.questions)
                   ? aiSection.questions.map((q: any, qIndex: number) => {
                       const baseId = index === 0 ? qIndex + 1 : 
-                                     index === 1 ? qIndex + SECTION_1_QUESTIONS + 1 :
-                                     qIndex + SECTION_1_QUESTIONS + SECTION_2_QUESTIONS + 1;
+                                     index === 1 ? qIndex + questionCounts.section1 + 1 :
+                                     qIndex + questionCounts.section1 + questionCounts.section2 + 1;
                       return {
                         id: baseId,
                         text: q.text || '',
@@ -231,14 +238,53 @@ export default function GeneralReading() {
 
   const handleSaveTest = async () => {
     try {
-      await saveTest({
+      // Format the test data to match the expected structure in Practice/Simulation pages
+      const formattedTest = {
         ...test,
+        title: `General Reading Test - ${new Date().toLocaleDateString()}`,
+        module: 'reading',
         testType: 'general',
-        module: 'reading'
+        type: test.type,
+        // Add these fields to make it compatible with Practice/Simulation pages
+        hasReading: true,
+        hasListening: false,
+        hasWriting: false,
+        hasSpeaking: false,
+        status: 'active',
+        // Format content to match expected structure
+        content: {
+          reading: {
+            passages: test.sections.map((section, index) => ({
+              title: section.title,
+              content: section.content,
+              questions: section.questions,
+              difficulty: index === 0 ? 'basic' : index === 1 ? 'intermediate' : 'advanced',
+              source: section.sources.join(', '),
+              purpose: section.purpose
+            }))
+          }
+        }
+      };
+
+      const testId = await saveTest(formattedTest);
+      
+      toast({
+        title: "Test Saved Successfully",
+        description: "Your General Reading test has been saved and is now available in the Practice section.",
+        variant: "default"
       });
-      // Success message could be added here
+      
+      // Redirect to practice page after successful save
+      setTimeout(() => {
+        window.location.href = '/practice?module=reading';
+      }, 2000);
     } catch (error) {
       console.error('Error saving test:', error);
+      toast({
+        title: "Error Saving Test",
+        description: "There was a problem saving your test. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -862,6 +908,29 @@ export default function GeneralReading() {
     );
   };
 
+  const updateSectionQuestionCount = (sectionIndex: number, newCount: number) => {
+    setQuestionCounts(prev => {
+      const newCounts = { ...prev };
+      if (sectionIndex === 0) newCounts.section1 = newCount;
+      if (sectionIndex === 1) newCounts.section2 = newCount;
+      if (sectionIndex === 2) newCounts.section3 = newCount;
+      return newCounts;
+    });
+
+    setTest(prev => ({
+      ...prev,
+      sections: prev.sections.map((s, idx) => {
+        if (idx === sectionIndex) {
+          const newQuestions = Array(newCount).fill(null).map((_, index) => 
+            createEmptyQuestion(index + 1 + (idx === 0 ? 0 : idx === 1 ? questionCounts.section1 : questionCounts.section1 + questionCounts.section2))
+          );
+          return { ...s, questions: newQuestions };
+        }
+        return s;
+      })
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
@@ -1051,6 +1120,69 @@ export default function GeneralReading() {
                   <Button variant="outline" onClick={handleAddTag} disabled={!currentTag}>
                     Add
                   </Button>
+                </div>
+              </div>
+
+              <div>
+                <Label>Question Counts</Label>
+                <div className="mt-2 space-y-2">
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <Label htmlFor="section1-count" className="text-xs">Section 1:</Label>
+                    <Input
+                      id="section1-count"
+                      type="number"
+                      value={questionCounts.section1}
+                      onChange={(e) => {
+                        const newCount = Math.max(1, parseInt(e.target.value) || 1);
+                        updateSectionQuestionCount(0, newCount);
+                      }}
+                      min={1}
+                      max={20}
+                      className="h-8"
+                    />
+                    <span className="text-xs text-gray-500">questions</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <Label htmlFor="section2-count" className="text-xs">Section 2:</Label>
+                    <Input
+                      id="section2-count"
+                      type="number"
+                      value={questionCounts.section2}
+                      onChange={(e) => {
+                        const newCount = Math.max(1, parseInt(e.target.value) || 1);
+                        updateSectionQuestionCount(1, newCount);
+                      }}
+                      min={1}
+                      max={20}
+                      className="h-8"
+                    />
+                    <span className="text-xs text-gray-500">questions</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <Label htmlFor="section3-count" className="text-xs">Section 3:</Label>
+                    <Input
+                      id="section3-count"
+                      type="number"
+                      value={questionCounts.section3}
+                      onChange={(e) => {
+                        const newCount = Math.max(1, parseInt(e.target.value) || 1);
+                        updateSectionQuestionCount(2, newCount);
+                      }}
+                      min={1}
+                      max={20}
+                      className="h-8"
+                    />
+                    <span className="text-xs text-gray-500">questions</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-xs font-medium">Total Questions:</span>
+                    <Badge variant="outline">
+                      {questionCounts.section1 + questionCounts.section2 + questionCounts.section3}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             </div>

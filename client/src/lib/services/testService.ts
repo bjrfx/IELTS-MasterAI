@@ -2,17 +2,25 @@ import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 
 interface IELTSTest {
-  passage: string;
-  questions: string[];
-  answers: string[];
+  title: string;
   tags: string[];
   type: 'practice' | 'simulation';
   testType: 'general' | 'academic';
   module: 'reading' | 'writing' | 'listening' | 'speaking';
-  createdAt: Date;
+  hasReading: boolean;
+  hasListening: boolean;
+  hasWriting: boolean;
+  hasSpeaking: boolean;
+  status: string;
+  content: any; // Allow for more complex content structure
+  createdAt?: Date;
+  // These fields are optional since they're only for basic tests
+  passage?: string;
+  questions?: string[];
+  answers?: string[];
 }
 
-const COLLECTION_NAME = 'ielts_tests';
+const COLLECTION_NAME = 'tests';
 
 export const saveTest = async (test: Omit<IELTSTest, 'createdAt'>) => {
   try {

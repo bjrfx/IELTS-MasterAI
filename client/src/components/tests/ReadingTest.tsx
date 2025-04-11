@@ -31,11 +31,11 @@ export default function ReadingTest() {
     }
   };
   
-  const handleInputAnswer = (questionId: number, value: string) => {
+  const handleInputAnswer = (questionId: number | string, value: string) => {
     updateAnswer('reading', `${questionId}`, value);
   };
   
-  const handleRadioAnswer = (questionId: number, value: string) => {
+  const handleRadioAnswer = (questionId: number | string, value: string) => {
     updateAnswer('reading', `${questionId}`, value);
   };
   
@@ -47,7 +47,7 @@ export default function ReadingTest() {
     // Here you would trigger submission of answers
   };
   
-  const getQuestionValue = (questionId: number): string => {
+  const getQuestionValue = (questionId: number | string): string => {
     return (answers.reading && answers.reading[`${questionId}`]) as string || '';
   };
   
@@ -94,25 +94,60 @@ export default function ReadingTest() {
             <div className="space-y-6">
               {currentPassage?.questions.map((question) => (
                 <div key={question.id} className="mb-6">
-                  {question.type === 'fill-blank' && (
+                  {/* Handle fill-in-the-blank/completion questions */}
+                  {(question.type === 'fill-blank' || 
+                    question.type?.includes('completion') || 
+                    question.type === 'short-answer') && (
                     <div className="flex items-start">
                       <span className="font-medium mr-2">{question.id}.</span>
                       <div className="flex-grow">
-                        <div dangerouslySetInnerHTML={{ 
-                          __html: question.text.replace(
-                            /\[BLANK\]/g, 
-                            `<input type="text" 
-                              class="border-b border-gray-600 w-24 focus:outline-none focus:border-primary px-1" 
-                              value="${getQuestionValue(question.id)}" 
-                              onchange="this.dispatchEvent(new CustomEvent('answer-changed', {bubbles: true, detail: {id: ${question.id}, value: this.value}}))"
-                            />`
-                          ) 
-                        }} />
+                        {/* If question has instructions, display them */}
+                        {question.instructions && (
+                          <p className="mb-2 text-sm italic">{question.instructions}</p>
+                        )}
+                        
+                        {/* If question has subQuestions, display them */}
+                        {question.subQuestions ? (
+                          <div className="space-y-3">
+                            {/* Main question text */}
+                            <p className="mb-2">{question.text}</p>
+                            
+                            {/* Sub-questions with individual inputs */}
+                            {question.subQuestions.map((subQ) => (
+                              <div key={subQ.id} className="flex items-start">
+                                <span className="font-medium mr-2">{subQ.id}</span>
+                                <div className="flex-grow">
+                                  <p className="mb-1">{subQ.text}</p>
+                                  <Input
+                                    value={getQuestionValue(subQ.id)}
+                                    onChange={(e) => handleInputAnswer(subQ.id, e.target.value)}
+                                    placeholder="Your answer"
+                                    className="max-w-xs"
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          /* Simple text with input for non-sub-question types */
+                          <div>
+                            <p className="mb-2">{question.text}</p>
+                            <Input
+                              value={getQuestionValue(question.id)}
+                              onChange={(e) => handleInputAnswer(question.id, e.target.value)}
+                              placeholder="Your answer"
+                              className="max-w-xs"
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
                   
-                  {question.type === 'true-false-ng' && (
+                  {/* Handle True/False/Not Given questions */}
+                  {(question.type === 'true-false-ng' || 
+                    question.type === 'identifying-information' ||
+                    question.type === 'true-false-not-given') && (
                     <div className="flex items-start">
                       <span className="font-medium mr-2">{question.id}.</span>
                       <div className="flex-grow">
@@ -123,15 +158,15 @@ export default function ReadingTest() {
                           className="flex space-x-4"
                         >
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="true" id={`q${question.id}-true`} />
+                            <RadioGroupItem value="TRUE" id={`q${question.id}-true`} />
                             <Label htmlFor={`q${question.id}-true`}>True</Label>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="false" id={`q${question.id}-false`} />
+                            <RadioGroupItem value="FALSE" id={`q${question.id}-false`} />
                             <Label htmlFor={`q${question.id}-false`}>False</Label>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="not-given" id={`q${question.id}-ng`} />
+                            <RadioGroupItem value="NOT GIVEN" id={`q${question.id}-ng`} />
                             <Label htmlFor={`q${question.id}-ng`}>Not Given</Label>
                           </div>
                         </RadioGroup>
@@ -139,6 +174,37 @@ export default function ReadingTest() {
                     </div>
                   )}
                   
+                  {/* Handle Yes/No/Not Given questions */}
+                  {(question.type === 'yes-no-ng' || 
+                    question.type === 'identifying-views' ||
+                    question.type === 'yes-no-not-given') && (
+                    <div className="flex items-start">
+                      <span className="font-medium mr-2">{question.id}.</span>
+                      <div className="flex-grow">
+                        <p className="mb-2">{question.text}</p>
+                        <RadioGroup 
+                          value={getQuestionValue(question.id)}
+                          onValueChange={(value) => handleRadioAnswer(question.id, value)}
+                          className="flex space-x-4"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="YES" id={`q${question.id}-yes`} />
+                            <Label htmlFor={`q${question.id}-yes`}>Yes</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="NO" id={`q${question.id}-no`} />
+                            <Label htmlFor={`q${question.id}-no`}>No</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="NOT GIVEN" id={`q${question.id}-ng`} />
+                            <Label htmlFor={`q${question.id}-ng`}>Not Given</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Handle multiple-choice questions */}
                   {question.type === 'multiple-choice' && (
                     <div className="flex items-start">
                       <span className="font-medium mr-2">{question.id}.</span>
@@ -156,6 +222,59 @@ export default function ReadingTest() {
                             </div>
                           ))}
                         </RadioGroup>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Handle matching questions */}
+                  {question.type?.startsWith('matching') && (
+                    <div className="flex items-start">
+                      <span className="font-medium mr-2">{question.id}.</span>
+                      <div className="flex-grow">
+                        <p className="mb-2">{question.text}</p>
+                        
+                        {/* Display the matching options for reference */}
+                        {question.options && question.options.length > 0 && (
+                          <div className="mb-4 p-3 bg-gray-50 rounded-md">
+                            <p className="font-medium mb-1">Options:</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                              {question.options.map((option, i) => (
+                                <div key={i} className="text-sm">{option}</div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Input for the answer */}
+                        <div className="flex items-center">
+                          <Label htmlFor={`q${question.id}-answer`} className="mr-2">Answer:</Label>
+                          <Input
+                            id={`q${question.id}-answer`}
+                            value={getQuestionValue(question.id)}
+                            onChange={(e) => handleInputAnswer(question.id, e.target.value)}
+                            placeholder="Enter your answer (e.g., A, B, C...)"
+                            className="max-w-[100px]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Fallback for any other question type */}
+                  {!['fill-blank', 'true-false-ng', 'multiple-choice', 'yes-no-ng', 'identifying-information', 'identifying-views', 'true-false-not-given', 'yes-no-not-given'].includes(question.type || '') && 
+                    !question.type?.includes('completion') &&
+                    !question.type?.startsWith('matching') &&
+                    question.type !== 'short-answer' && (
+                    <div className="flex items-start">
+                      <span className="font-medium mr-2">{question.id}.</span>
+                      <div className="flex-grow">
+                        <p className="mb-2">{question.text}</p>
+                        <Input
+                          value={getQuestionValue(question.id)}
+                          onChange={(e) => handleInputAnswer(question.id, e.target.value)}
+                          placeholder="Your answer"
+                          className="max-w-md"
+                        />
                       </div>
                     </div>
                   )}
@@ -186,22 +305,6 @@ export default function ReadingTest() {
           </div>
         </div>
       </Card>
-      
-      {/* Listen for custom events from the HTML in dangerouslySetInnerHTML */}
-      <div style={{ display: 'none' }} id="event-listener" 
-        onAnswerChanged={(e: any) => {
-          const { id, value } = e.detail;
-          handleInputAnswer(id, value);
-        }}
-      />
     </div>
   );
 }
-
-// Add event listener to document for the custom event
-document.addEventListener('answer-changed', (e: any) => {
-  const eventListener = document.getElementById('event-listener');
-  if (eventListener && eventListener.onAnswerChanged) {
-    eventListener.onAnswerChanged(e);
-  }
-});

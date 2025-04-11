@@ -42,7 +42,7 @@ export default function Practice() {
     
     // Filter by test type if needed
     if (testType !== "all") {
-      filtered = filtered.filter(test => test.type === testType);
+      filtered = filtered.filter(test => test.testType === testType);
     }
     
     // Filter by module if needed

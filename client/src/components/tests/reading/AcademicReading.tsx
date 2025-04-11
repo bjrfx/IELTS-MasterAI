@@ -10,6 +10,7 @@ import { generateTest } from '@/lib/services/geminiService';
 import { saveTest } from '@/lib/services/testService';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 import {
   Accordion,
   AccordionContent,
@@ -85,18 +86,24 @@ const createEmptyQuestion = (id: number, type: QuestionType = 'multiple-choice')
     undefined
 });
 
-// Initial distribution of questions across passages
-const PASSAGE_1_QUESTIONS = 13;
-const PASSAGE_2_QUESTIONS = 13;
-const PASSAGE_3_QUESTIONS = 14;
+// Initial distribution of questions across passages - changed to variables for configurability
+const DEFAULT_PASSAGE_1_QUESTIONS = 13;
+const DEFAULT_PASSAGE_2_QUESTIONS = 13;
+const DEFAULT_PASSAGE_3_QUESTIONS = 14;
 
 export default function AcademicReading() {
+  const [questionCounts, setQuestionCounts] = useState({
+    passage1: DEFAULT_PASSAGE_1_QUESTIONS,
+    passage2: DEFAULT_PASSAGE_2_QUESTIONS,
+    passage3: DEFAULT_PASSAGE_3_QUESTIONS
+  });
+  
   const [test, setTest] = useState<ReadingTest>({
     passages: [
       {
         title: 'Academic Passage 1',
         content: '',
-        questions: Array(PASSAGE_1_QUESTIONS).fill(null).map((_, index) => 
+        questions: Array(questionCounts.passage1).fill(null).map((_, index) => 
           createEmptyQuestion(index + 1)
         ),
         source: '',
@@ -106,8 +113,8 @@ export default function AcademicReading() {
       {
         title: 'Academic Passage 2',
         content: '',
-        questions: Array(PASSAGE_2_QUESTIONS).fill(null).map((_, index) => 
-          createEmptyQuestion(index + PASSAGE_1_QUESTIONS + 1)
+        questions: Array(questionCounts.passage2).fill(null).map((_, index) => 
+          createEmptyQuestion(index + questionCounts.passage1 + 1)
         ),
         source: '',
         topic: 'Natural Science',
@@ -116,8 +123,8 @@ export default function AcademicReading() {
       {
         title: 'Academic Passage 3',
         content: '',
-        questions: Array(PASSAGE_3_QUESTIONS).fill(null).map((_, index) => 
-          createEmptyQuestion(index + PASSAGE_1_QUESTIONS + PASSAGE_2_QUESTIONS + 1)
+        questions: Array(questionCounts.passage3).fill(null).map((_, index) => 
+          createEmptyQuestion(index + questionCounts.passage1 + questionCounts.passage2 + 1)
         ),
         source: '',
         topic: 'Arts/Humanities',
@@ -158,8 +165,8 @@ export default function AcademicReading() {
                 questions: Array.isArray(aiPassage.questions)
                   ? aiPassage.questions.map((q: any, qIndex: number) => {
                       const baseId = index === 0 ? qIndex + 1 : 
-                                    index === 1 ? qIndex + PASSAGE_1_QUESTIONS + 1 :
-                                    qIndex + PASSAGE_1_QUESTIONS + PASSAGE_2_QUESTIONS + 1;
+                                    index === 1 ? qIndex + questionCounts.passage1 + 1 :
+                                    qIndex + questionCounts.passage1 + questionCounts.passage2 + 1;
                       return {
                         id: baseId,
                         text: q.text || '',
@@ -208,14 +215,48 @@ export default function AcademicReading() {
 
   const handleSaveTest = async () => {
     try {
-      await saveTest({
+      // Format the test data to match the expected structure in Practice/Simulation pages
+      const formattedTest = {
         ...test,
+        title: `Academic Reading Test - ${new Date().toLocaleDateString()}`,
+        module: 'reading',
         testType: 'academic',
-        module: 'reading'
+        type: test.type,
+        // Add these fields to make it compatible with Practice/Simulation pages
+        hasReading: true,
+        hasListening: false,
+        hasWriting: false,
+        hasSpeaking: false,
+        status: 'active',
+        // Format content to match expected structure
+        content: {
+          reading: {
+            passages: test.passages.map((passage) => ({
+              ...passage
+            }))
+          }
+        }
+      };
+
+      const testId = await saveTest(formattedTest);
+      
+      toast({
+        title: "Test Saved Successfully",
+        description: "Your Academic Reading test has been saved and is now available in the Practice section.",
+        variant: "default"
       });
-      // Success message could be added here
+      
+      // Redirect to practice page after successful save
+      setTimeout(() => {
+        window.location.href = '/practice?module=reading';
+      }, 2000);
     } catch (error) {
       console.error('Error saving test:', error);
+      toast({
+        title: "Error Saving Test",
+        description: "There was a problem saving your test. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -832,6 +873,51 @@ export default function AcademicReading() {
     );
   };
 
+  const updatePassageQuestionCount = (passageIndex: number, newCount: number) => {
+    setQuestionCounts(prev => {
+      const newCounts = { ...prev };
+      if (passageIndex === 0) newCounts.passage1 = newCount;
+      if (passageIndex === 1) newCounts.passage2 = newCount;
+      if (passageIndex === 2) newCounts.passage3 = newCount;
+      return newCounts;
+    });
+
+    // Update the test with the new question counts, ensuring question IDs remain consistent
+    setTest(prev => {
+      // Create a new passages array with the updated questions
+      const newPassages = [...prev.passages];
+      
+      // Update the specified passage with the new question count
+      if (passageIndex === 0) {
+        newPassages[0] = {
+          ...newPassages[0],
+          questions: Array(newCount).fill(null).map((_, index) => 
+            createEmptyQuestion(index + 1)
+          )
+        };
+      } else if (passageIndex === 1) {
+        newPassages[1] = {
+          ...newPassages[1],
+          questions: Array(newCount).fill(null).map((_, index) => 
+            createEmptyQuestion(index + questionCounts.passage1 + 1)
+          )
+        };
+      } else if (passageIndex === 2) {
+        newPassages[2] = {
+          ...newPassages[2],
+          questions: Array(newCount).fill(null).map((_, index) => 
+            createEmptyQuestion(index + questionCounts.passage1 + questionCounts.passage2 + 1)
+          )
+        };
+      }
+      
+      return {
+        ...prev,
+        passages: newPassages
+      };
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
@@ -883,15 +969,15 @@ export default function AcademicReading() {
             <TabsList className="w-full justify-start mb-4">
               <TabsTrigger value="passage-0" className="flex items-center">
                 <BookOpen className="mr-2 h-4 w-4" />
-                Passage 1 ({PASSAGE_1_QUESTIONS} questions)
+                Passage 1 ({questionCounts.passage1} questions)
               </TabsTrigger>
               <TabsTrigger value="passage-1" className="flex items-center">
                 <BookOpen className="mr-2 h-4 w-4" />
-                Passage 2 ({PASSAGE_2_QUESTIONS} questions)
+                Passage 2 ({questionCounts.passage2} questions)
               </TabsTrigger>
               <TabsTrigger value="passage-2" className="flex items-center">
                 <BookOpen className="mr-2 h-4 w-4" />
-                Passage 3 ({PASSAGE_3_QUESTIONS} questions)
+                Passage 3 ({questionCounts.passage3} questions)
               </TabsTrigger>
             </TabsList>
             
@@ -905,7 +991,15 @@ export default function AcademicReading() {
                         <h2 className="text-xl font-semibold">{passage.title}</h2>
                         {getDifficultyBadge(passage.difficulty)}
                       </div>
-                      <p className="text-sm text-gray-600">{passage.topic} (Questions {passageIndex === 0 ? '1-13' : passageIndex === 1 ? '14-26' : '27-40'})</p>
+                      <p className="text-sm text-gray-600">
+                        {passage.topic} 
+                        {passageIndex === 0 
+                          ? ` (Questions 1-${questionCounts.passage1})` 
+                          : passageIndex === 1 
+                            ? ` (Questions ${questionCounts.passage1 + 1}-${questionCounts.passage1 + questionCounts.passage2})` 
+                            : ` (Questions ${questionCounts.passage1 + questionCounts.passage2 + 1}-${questionCounts.passage1 + questionCounts.passage2 + questionCounts.passage3})`
+                        }
+                      </p>
                     </div>
                     <div>
                       <Badge variant="outline" className="font-normal">
@@ -1076,6 +1170,68 @@ export default function AcademicReading() {
                   <Button variant="outline" onClick={handleAddTag} disabled={!currentTag}>
                     Add
                   </Button>
+                </div>
+              </div>
+              <div>
+                <Label>Question Counts</Label>
+                <div className="mt-2 space-y-2">
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <Label htmlFor="passage1-count" className="text-xs">Passage 1:</Label>
+                    <Input
+                      id="passage1-count"
+                      type="number"
+                      value={questionCounts.passage1}
+                      onChange={(e) => {
+                        const newCount = Math.max(1, parseInt(e.target.value) || 1);
+                        updatePassageQuestionCount(0, newCount);
+                      }}
+                      min={1}
+                      max={20}
+                      className="h-8"
+                    />
+                    <span className="text-xs text-gray-500">questions</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <Label htmlFor="passage2-count" className="text-xs">Passage 2:</Label>
+                    <Input
+                      id="passage2-count"
+                      type="number"
+                      value={questionCounts.passage2}
+                      onChange={(e) => {
+                        const newCount = Math.max(1, parseInt(e.target.value) || 1);
+                        updatePassageQuestionCount(1, newCount);
+                      }}
+                      min={1}
+                      max={20}
+                      className="h-8"
+                    />
+                    <span className="text-xs text-gray-500">questions</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <Label htmlFor="passage3-count" className="text-xs">Passage 3:</Label>
+                    <Input
+                      id="passage3-count"
+                      type="number"
+                      value={questionCounts.passage3}
+                      onChange={(e) => {
+                        const newCount = Math.max(1, parseInt(e.target.value) || 1);
+                        updatePassageQuestionCount(2, newCount);
+                      }}
+                      min={1}
+                      max={20}
+                      className="h-8"
+                    />
+                    <span className="text-xs text-gray-500">questions</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-xs font-medium">Total Questions:</span>
+                    <Badge variant="outline">
+                      {questionCounts.passage1 + questionCounts.passage2 + questionCounts.passage3}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             </div>
